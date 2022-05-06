@@ -1,22 +1,19 @@
-﻿using Microsoft.Azure.Devices.Client;
-using System.Text;
-using System.Text.Json;
+﻿using IotHubDemo;
+using Microsoft.Azure.Devices.Client;
+using Microsoft.Extensions.Configuration;
 
 // Connection string of the device
-const string connectionString = "<connection string>";
+var configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
 
-// Example message to send
-var text = JsonSerializer.Serialize(new
-{
-    Message = "This is an example message"
-});
+var connectionString = configuration["ConnectionString"];
 
 using var client = DeviceClient.CreateFromConnectionString(connectionString);
 
-using var message = new Message(Encoding.UTF8.GetBytes(text))
-{
-    ContentEncoding = "utf-8",
-    ContentType = "application/json"
-};
+await client.SetMethodHandlerAsync("v1/activate", Handler.DefaultHandler, null);
 
-await client.SendEventAsync(message);
+while (true)
+{
+    await Task.Delay(1000);
+}
